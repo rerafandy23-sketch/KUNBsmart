@@ -3,11 +3,29 @@ import { neon } from "@neondatabase/serverless";
 let sql;
 let ready;
 
+function findDatabaseUrl() {
+  const directUrl =
+    process.env.DATABASE_URL ||
+    process.env.STORAGE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.NEON_DATABASE_URL;
+
+  if (directUrl) return directUrl;
+
+  const urlKey = Object.keys(process.env).find((key) => {
+    const value = process.env[key];
+    return key.endsWith("_URL") && typeof value === "string" && value.startsWith("postgres");
+  });
+
+  return urlKey ? process.env[urlKey] : "";
+}
+
 export function getSql() {
-  const databaseUrl = process.env.DATABASE_URL || process.env.STORAGE_URL;
+  const databaseUrl = findDatabaseUrl();
 
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL atau STORAGE_URL belum diatur di Vercel.");
+    throw new Error("URL database Neon/Postgres belum tersedia di Vercel.");
   }
 
   if (!sql) {
