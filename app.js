@@ -94,11 +94,12 @@ const storageKeys = {
   suggestions: "kunbsmart.suggestions",
   operator: "kunbsmart.operator",
   operatorCode: "kunbsmart.operatorCode",
+  hiddenDefaultProducts: "kunbsmart.hiddenDefaultProducts",
 };
 
 const operatorAccessCode = "KUNB2026";
 
-let products = [...defaultProducts, ...loadStoredProducts()];
+let products = [...loadVisibleDefaultProducts(), ...loadStoredProducts()];
 let suggestions = loadStoredSuggestions();
 
 const state = {
@@ -142,6 +143,25 @@ function loadStoredProducts() {
   } catch {
     return [];
   }
+}
+
+function loadHiddenDefaultIds() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKeys.hiddenDefaultProducts) || "[]").map(String);
+  } catch {
+    return [];
+  }
+}
+
+function loadVisibleDefaultProducts() {
+  const hiddenIds = new Set(loadHiddenDefaultIds());
+  return defaultProducts.filter((product) => !hiddenIds.has(String(product.id)));
+}
+
+function hideDefaultProduct(productId) {
+  const hiddenIds = new Set(loadHiddenDefaultIds());
+  hiddenIds.add(String(productId));
+  localStorage.setItem(storageKeys.hiddenDefaultProducts, JSON.stringify([...hiddenIds]));
 }
 
 function loadStoredSuggestions() {
@@ -316,7 +336,7 @@ function renderProducts() {
           ${product.stock === 0 ? "Tidak tersedia" : "Tambah"}
         </button>
         ${
-          isOperatorActive() && product.custom
+          isOperatorActive()
             ? `<button class="delete-button" data-delete-id="${escapeHtml(product.id)}">Hapus Produk</button>`
             : ""
         }
@@ -464,12 +484,13 @@ productGrid.addEventListener("click", async (event) => {
   if (!button) return;
 
   const product = products.find((item) => String(item.id) === button.dataset.deleteId);
-  if (!product || !product.custom) return;
+  if (!product) return;
 
   const confirmed = confirm(`Hapus produk "${product.name}" dari katalog?`);
   if (!confirmed) return;
 
   const databaseResult = String(product.id).startsWith("db-") ? await deleteDatabaseProduct(product.id) : null;
+  if (!product.custom) hideDefaultProduct(product.id);
   products = products.filter((item) => String(item.id) !== String(product.id));
   state.cart = state.cart.filter((item) => String(item.id) !== String(product.id));
   saveCustomProducts();
@@ -539,12 +560,14 @@ operatorForm.addEventListener("submit", (event) => {
   }
 
   setOperatorAccess(true, operatorCode.value.trim());
+  renderProducts();
 });
 
 operatorLogout.addEventListener("click", () => {
   sessionStorage.removeItem(storageKeys.operator);
   sessionStorage.removeItem(storageKeys.operatorCode);
   setOperatorAccess(false);
+  renderProducts();
 });
 
 suggestionForm.addEventListener("submit", async (event) => {
