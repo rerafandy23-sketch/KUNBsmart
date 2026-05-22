@@ -1,12 +1,12 @@
 :root {
   color-scheme: light;
-  --bg: #f7f6f2;
+  --bg: #e8f5e9;
   --surface: #ffffff;
   --ink: #1f2933;
   --muted: #697586;
-  --line: #dedbd2;
-  --brand: #0f766e;
-  --brand-dark: #115e59;
+  --line: #d7e6d8;
+  --brand: #2e7d32;
+  --brand-dark: #1b5e20;
   --accent: #c2410c;
   --ok: #15803d;
   --warn: #b45309;
@@ -41,7 +41,7 @@ textarea {
   justify-content: space-between;
   gap: 16px;
   padding: 14px clamp(16px, 4vw, 44px);
-  background: rgba(247, 246, 242, 0.94);
+  background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(14px);
 }
@@ -190,7 +190,7 @@ textarea {
   min-height: 46px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: #ffffff;
   color: var(--ink);
 }
 
@@ -373,7 +373,7 @@ textarea {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfaf7;
+  background: #f5f5f5;
 }
 
 .suggestion-item strong,
@@ -401,7 +401,7 @@ textarea {
   place-items: center;
   aspect-ratio: 4 / 3;
   border-radius: 7px;
-  background: linear-gradient(135deg, #ecfdf5, #fff7ed);
+  background: linear-gradient(135deg, #e8f5e9, #ffffff);
 }
 
 .product-mark {
@@ -409,7 +409,7 @@ textarea {
   place-items: center;
   width: 72px;
   height: 72px;
-  border: 2px solid rgba(15, 118, 110, 0.25);
+  border: 2px solid rgba(46, 125, 50, 0.25);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.72);
   color: var(--brand-dark);
@@ -442,7 +442,7 @@ textarea {
   min-height: 24px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #edf7f5;
+  background: #e8f5e9;
   color: var(--brand-dark);
   font-size: 12px;
   font-weight: 800;
@@ -527,7 +527,7 @@ textarea {
   padding: 28px;
   border: 1px dashed var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.5);
+  background: #f5f5f5;
   text-align: center;
   color: var(--muted);
 }
@@ -587,7 +587,7 @@ textarea {
   width: 44px;
   height: 44px;
   border-radius: 8px;
-  background: #ecfdf5;
+  background: #e8f5e9;
   color: var(--brand-dark);
   font-weight: 900;
 }
