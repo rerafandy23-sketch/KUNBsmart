@@ -4,12 +4,14 @@ let sql;
 let ready;
 
 export function getSql() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL belum diatur di Vercel.");
+  const databaseUrl = process.env.DATABASE_URL || process.env.STORAGE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL atau STORAGE_URL belum diatur di Vercel.");
   }
 
   if (!sql) {
-    sql = neon(process.env.DATABASE_URL);
+    sql = neon(databaseUrl);
   }
 
   return sql;
