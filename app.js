@@ -131,6 +131,11 @@ const operatorForm = document.querySelector("#operatorForm");
 const operatorCode = document.querySelector("#operatorCode");
 const operatorStatus = document.querySelector("#operatorStatus");
 const operatorLogout = document.querySelector("#operatorLogout");
+const excelFile = document.querySelector("#excelFile");
+const importExcel = document.querySelector("#importExcel");
+const exportExcel = document.querySelector("#exportExcel");
+const downloadTemplate = document.querySelector("#downloadTemplate");
+const excelStatus = document.querySelector("#excelStatus");
 const suggestionForm = document.querySelector("#suggestionForm");
 const suggestionStatus = document.querySelector("#suggestionStatus");
 const recommendedProducts = document.querySelector("#recommendedProducts");
@@ -276,6 +281,72 @@ function makeMark(name) {
     .join("")
     .toUpperCase()
     .slice(0, 3);
+}
+
+function toBoolean(value) {
+  if (typeof value === "boolean") return value;
+  const text = String(value || "").trim().toLowerCase();
+  return ["true", "ya", "y", "1", "promo", "baru"].includes(text);
+}
+
+function normalizeImportedProduct(row) {
+  const name = String(row.name || row.nama || row["Nama Produk"] || "").trim();
+  const category = String(row.category || row.kategori || row.Kategori || "Sembako").trim();
+  const price = Number(row.price ?? row.harga ?? row.Harga ?? 0);
+  const oldPrice = Number(row.oldPrice ?? row.hargaLama ?? row["Harga Lama"] ?? 0);
+  const stock = Number(row.stock ?? row.stok ?? row.Stok ?? 0);
+  const mark = String(row.mark || row.kode || row.Kode || makeMark(name)).trim().toUpperCase().slice(0, 3);
+
+  if (!name || Number.isNaN(price) || Number.isNaN(stock)) return null;
+
+  return {
+    id: Date.now() + Math.floor(Math.random() * 100000),
+    name,
+    category,
+    price,
+    oldPrice: Number.isNaN(oldPrice) ? 0 : oldPrice,
+    stock,
+    promo: toBoolean(row.promo ?? row.diskon ?? row.Diskon),
+    isNew: toBoolean(row.isNew ?? row.baru ?? row.Baru),
+    mark: mark || makeMark(name),
+    custom: true,
+  };
+}
+
+function productsForExcel() {
+  return products.map((product) => ({
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    oldPrice: product.oldPrice,
+    stock: product.stock,
+    promo: product.promo ? "ya" : "tidak",
+    isNew: product.isNew ? "ya" : "tidak",
+    mark: product.mark,
+  }));
+}
+
+function downloadWorkbook(rows, filename) {
+  if (!window.XLSX) {
+    excelStatus.textContent = "Library Excel belum termuat. Coba refresh halaman.";
+    return;
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Produk");
+  XLSX.writeFile(workbook, filename);
+}
+
+async function readExcelRows(file) {
+  if (!window.XLSX) {
+    throw new Error("Library Excel belum termuat. Coba refresh halaman.");
+  }
+
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(sheet, { defval: "" });
 }
 
 function getStockClass(stock) {
@@ -568,6 +639,73 @@ operatorLogout.addEventListener("click", () => {
   sessionStorage.removeItem(storageKeys.operatorCode);
   setOperatorAccess(false);
   renderProducts();
+});
+
+downloadTemplate.addEventListener("click", () => {
+  downloadWorkbook(
+    [
+      {
+        name: "Gula Pasir 1 kg",
+        category: "Sembako",
+        price: 16500,
+        oldPrice: 18000,
+        stock: 20,
+        promo: "ya",
+        isNew: "ya",
+        mark: "GL",
+      },
+    ],
+    "template-produk-kunbsmart.xlsx",
+  );
+});
+
+exportExcel.addEventListener("click", () => {
+  downloadWorkbook(productsForExcel(), "produk-kunbsmart.xlsx");
+});
+
+importExcel.addEventListener("click", async () => {
+  const file = excelFile.files?.[0];
+  if (!file) {
+    excelStatus.textContent = "Pilih file Excel terlebih dahulu.";
+    return;
+  }
+
+  excelStatus.textContent = "Membaca file Excel...";
+
+  try {
+    const rows = await readExcelRows(file);
+    const importedProducts = rows.map(normalizeImportedProduct).filter(Boolean);
+
+    if (importedProducts.length === 0) {
+      excelStatus.textContent = "Tidak ada produk valid di file Excel.";
+      return;
+    }
+
+    let databaseCount = 0;
+    let localCount = 0;
+
+    for (const product of importedProducts) {
+      const databaseResult = await createDatabaseProduct(product);
+      if (databaseResult?.product) {
+        products.push({ ...databaseResult.product, custom: true });
+        databaseCount += 1;
+      } else {
+        products.push(product);
+        localCount += 1;
+      }
+    }
+
+    if (localCount > 0) saveCustomProducts();
+    excelFile.value = "";
+    excelStatus.textContent =
+      databaseCount > 0
+        ? `${databaseCount} produk berhasil diimport ke database.${localCount ? ` ${localCount} produk tersimpan lokal.` : ""}`
+        : `${localCount} produk berhasil diimport di browser ini. Database belum tersambung.`;
+    renderAll();
+    switchView("catalogView");
+  } catch (error) {
+    excelStatus.textContent = error.message || "Gagal membaca file Excel.";
+  }
 });
 
 suggestionForm.addEventListener("submit", async (event) => {
