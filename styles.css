@@ -49,20 +49,7 @@ textarea {
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
   min-width: 0;
-}
-
-.logo-mark {
-  width: 82px;
-  height: 82px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: #ffffff;
-  object-fit: contain;
-  object-position: center;
-  padding: 4px;
-  box-shadow: 0 10px 22px rgba(18, 68, 105, 0.2);
 }
 
 .eyebrow {
@@ -628,15 +615,6 @@ textarea {
   .topbar {
     align-items: flex-start;
     padding: 12px;
-  }
-
-  .brand {
-    gap: 10px;
-  }
-
-  .logo-mark {
-    width: 62px;
-    height: 62px;
   }
 
   h1 {
