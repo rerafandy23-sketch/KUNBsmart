@@ -207,6 +207,15 @@ async function createDatabaseProduct(product) {
   });
 }
 
+async function deleteDatabaseProduct(productId) {
+  return apiRequest(`/api/products?id=${encodeURIComponent(productId)}`, {
+    method: "DELETE",
+    headers: {
+      "x-operator-code": getOperatorCode(),
+    },
+  });
+}
+
 async function createDatabaseSuggestion(suggestion) {
   return apiRequest("/api/suggestions", {
     method: "POST",
@@ -306,6 +315,11 @@ function renderProducts() {
         <button class="add-button" data-id="${escapeHtml(product.id)}" ${product.stock === 0 ? "disabled" : ""}>
           ${product.stock === 0 ? "Tidak tersedia" : "Tambah"}
         </button>
+        ${
+          isOperatorActive() && product.custom
+            ? `<button class="delete-button" data-delete-id="${escapeHtml(product.id)}">Hapus Produk</button>`
+            : ""
+        }
       `;
       productGrid.appendChild(card);
     });
@@ -443,6 +457,26 @@ productGrid.addEventListener("click", (event) => {
 
   state.cart.push(product);
   renderCart();
+});
+
+productGrid.addEventListener("click", async (event) => {
+  const button = event.target.closest(".delete-button");
+  if (!button) return;
+
+  const product = products.find((item) => String(item.id) === button.dataset.deleteId);
+  if (!product || !product.custom) return;
+
+  const confirmed = confirm(`Hapus produk "${product.name}" dari katalog?`);
+  if (!confirmed) return;
+
+  const databaseResult = String(product.id).startsWith("db-") ? await deleteDatabaseProduct(product.id) : null;
+  products = products.filter((item) => String(item.id) !== String(product.id));
+  state.cart = state.cart.filter((item) => String(item.id) !== String(product.id));
+  saveCustomProducts();
+  productStatus.textContent = databaseResult?.ok
+    ? `${product.name} berhasil dihapus dari database.`
+    : `${product.name} dihapus dari tampilan.`;
+  renderAll();
 });
 
 cartButton.addEventListener("click", () => setDrawer(true));
