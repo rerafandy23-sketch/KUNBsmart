@@ -93,11 +93,12 @@ const storageKeys = {
   products: "kunbsmart.products",
   suggestions: "kunbsmart.suggestions",
   operator: "kunbsmart.operator",
+  operatorCode: "kunbsmart.operatorCode",
 };
 
 const operatorAccessCode = "KUNB2026";
 
-let products = loadStoredProducts();
+let products = [...defaultProducts, ...loadStoredProducts()];
 let suggestions = loadStoredSuggestions();
 
 const state = {
@@ -137,9 +138,9 @@ const customerSuggestions = document.querySelector("#customerSuggestions");
 function loadStoredProducts() {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKeys.products) || "[]");
-    return [...defaultProducts, ...saved];
+    return saved;
   } catch {
-    return [...defaultProducts];
+    return [];
   }
 }
 
@@ -160,12 +161,66 @@ function saveSuggestions() {
   localStorage.setItem(storageKeys.suggestions, JSON.stringify(suggestions));
 }
 
+async function apiRequest(path, options = {}) {
+  try {
+    const response = await fetch(path, {
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
+function getOperatorCode() {
+  return sessionStorage.getItem(storageKeys.operatorCode) || "";
+}
+
+async function loadDatabaseData() {
+  const [productData, suggestionData] = await Promise.all([
+    apiRequest("/api/products"),
+    apiRequest("/api/suggestions"),
+  ]);
+
+  if (productData?.products) {
+    products = [...defaultProducts, ...productData.products.map((product) => ({ ...product, custom: true }))];
+  }
+
+  if (suggestionData?.suggestions) {
+    suggestions = suggestionData.suggestions;
+  }
+}
+
+async function createDatabaseProduct(product) {
+  return apiRequest("/api/products", {
+    method: "POST",
+    headers: {
+      "x-operator-code": getOperatorCode(),
+    },
+    body: JSON.stringify(product),
+  });
+}
+
+async function createDatabaseSuggestion(suggestion) {
+  return apiRequest("/api/suggestions", {
+    method: "POST",
+    body: JSON.stringify(suggestion),
+  });
+}
+
 function isOperatorActive() {
   return sessionStorage.getItem(storageKeys.operator) === "active";
 }
 
-function setOperatorAccess(active) {
+function setOperatorAccess(active, code = "") {
   sessionStorage.setItem(storageKeys.operator, active ? "active" : "");
+  if (active && code) sessionStorage.setItem(storageKeys.operatorCode, code);
   operatorForm.hidden = active;
   productForm.hidden = !active;
   if (active) {
@@ -248,7 +303,7 @@ function renderProducts() {
           <span>Harga satuan</span>
           <span class="stock ${getStockClass(product.stock)}">${getStockLabel(product.stock)}</span>
         </div>
-        <button class="add-button" data-id="${product.id}" ${product.stock === 0 ? "disabled" : ""}>
+        <button class="add-button" data-id="${escapeHtml(product.id)}" ${product.stock === 0 ? "disabled" : ""}>
           ${product.stock === 0 ? "Tidak tersedia" : "Tambah"}
         </button>
       `;
@@ -383,7 +438,7 @@ productGrid.addEventListener("click", (event) => {
   const button = event.target.closest(".add-button");
   if (!button) return;
 
-  const product = products.find((item) => item.id === Number(button.dataset.id));
+  const product = products.find((item) => String(item.id) === button.dataset.id);
   if (!product || product.stock === 0) return;
 
   state.cart.push(product);
@@ -396,7 +451,7 @@ cartDrawer.addEventListener("click", (event) => {
   if (event.target === cartDrawer) setDrawer(false);
 });
 
-productForm.addEventListener("submit", (event) => {
+productForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const name = document.querySelector("#productName").value.trim();
@@ -426,11 +481,17 @@ productForm.addEventListener("submit", (event) => {
     custom: true,
   };
 
-  products.push(product);
-  saveCustomProducts();
+  const databaseResult = await createDatabaseProduct(product);
+  const savedProduct = databaseResult?.product ? { ...databaseResult.product, custom: true } : product;
+
+  products.push(savedProduct);
+  if (!databaseResult?.product) saveCustomProducts();
+
   productForm.reset();
   document.querySelector("#productNew").checked = true;
-  productStatus.textContent = `${name} berhasil ditambahkan.`;
+  productStatus.textContent = databaseResult?.product
+    ? `${name} berhasil ditambahkan ke database.`
+    : `${name} berhasil ditambahkan di browser ini. Database belum tersambung.`;
   renderAll();
   switchView("catalogView");
 });
@@ -443,15 +504,16 @@ operatorForm.addEventListener("submit", (event) => {
     return;
   }
 
-  setOperatorAccess(true);
+  setOperatorAccess(true, operatorCode.value.trim());
 });
 
 operatorLogout.addEventListener("click", () => {
   sessionStorage.removeItem(storageKeys.operator);
+  sessionStorage.removeItem(storageKeys.operatorCode);
   setOperatorAccess(false);
 });
 
-suggestionForm.addEventListener("submit", (event) => {
+suggestionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const name = document.querySelector("#suggestionName").value.trim();
@@ -461,11 +523,21 @@ suggestionForm.addEventListener("submit", (event) => {
     return;
   }
 
-  suggestions.push({ name, text, createdAt: new Date().toISOString() });
-  saveSuggestions();
+  const suggestion = { name, text, createdAt: new Date().toISOString() };
+  const databaseResult = await createDatabaseSuggestion(suggestion);
+  suggestions.push(databaseResult?.suggestion || suggestion);
+  if (!databaseResult?.suggestion) saveSuggestions();
+
   suggestionForm.reset();
-  suggestionStatus.textContent = "Terima kasih, saran sudah tersimpan.";
+  suggestionStatus.textContent = databaseResult?.suggestion
+    ? "Terima kasih, saran sudah tersimpan di database."
+    : "Terima kasih, saran tersimpan di browser ini. Database belum tersambung.";
   renderSuggestions();
 });
 
-renderAll();
+async function init() {
+  await loadDatabaseData();
+  renderAll();
+}
+
+init();
