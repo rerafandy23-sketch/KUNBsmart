@@ -140,6 +140,7 @@ const suggestionForm = document.querySelector("#suggestionForm");
 const suggestionStatus = document.querySelector("#suggestionStatus");
 const recommendedProducts = document.querySelector("#recommendedProducts");
 const customerSuggestions = document.querySelector("#customerSuggestions");
+const operatorSuggestions = document.querySelector("#operatorSuggestions");
 
 function loadStoredProducts() {
   try {
@@ -257,6 +258,7 @@ function setOperatorAccess(active, code = "") {
   if (active && code) sessionStorage.setItem(storageKeys.operatorCode, code);
   operatorForm.hidden = active;
   productForm.hidden = !active;
+  operatorSuggestions.hidden = !active;
   if (active) {
     operatorStatus.textContent = "";
     operatorCode.value = "";
@@ -447,6 +449,12 @@ function renderRecommendations() {
 
 function renderSuggestions() {
   if (!customerSuggestions) return;
+  operatorSuggestions.hidden = !isOperatorActive();
+
+  if (!isOperatorActive()) {
+    customerSuggestions.innerHTML = "";
+    return;
+  }
 
   if (suggestions.length === 0) {
     customerSuggestions.innerHTML = '<p class="empty-state">Belum ada saran pelanggan.</p>';
@@ -632,6 +640,7 @@ operatorForm.addEventListener("submit", (event) => {
 
   setOperatorAccess(true, operatorCode.value.trim());
   renderProducts();
+  renderSuggestions();
 });
 
 operatorLogout.addEventListener("click", () => {
@@ -639,6 +648,7 @@ operatorLogout.addEventListener("click", () => {
   sessionStorage.removeItem(storageKeys.operatorCode);
   setOperatorAccess(false);
   renderProducts();
+  renderSuggestions();
 });
 
 downloadTemplate.addEventListener("click", () => {
