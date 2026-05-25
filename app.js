@@ -579,7 +579,7 @@ function setDrawer(open) {
 }
 
 function switchView(viewId) {
-  if ((viewId === "addProductView" || viewId === "suggestionView") && !canShowOperatorArea()) {
+  if (viewId === "addProductView" && !canShowOperatorArea()) {
     viewId = "catalogView";
   }
 
