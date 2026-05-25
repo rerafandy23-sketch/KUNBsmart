@@ -706,16 +706,16 @@ productForm.addEventListener("submit", async (event) => {
   };
 
   const databaseResult = await createDatabaseProduct(product);
-  const savedProduct = databaseResult?.product ? { ...databaseResult.product, custom: true } : product;
+  if (!databaseResult?.product) {
+    productStatus.textContent = "Produk gagal disimpan ke database. Pastikan login operator valid dan deploy Vercel terbaru sudah selesai.";
+    return;
+  }
 
-  products.push(savedProduct);
-  if (!databaseResult?.product) saveCustomProducts();
+  products.push({ ...databaseResult.product, custom: true });
 
   productForm.reset();
   document.querySelector("#productNew").checked = true;
-  productStatus.textContent = databaseResult?.product
-    ? `${name} berhasil ditambahkan ke database.`
-    : `${name} berhasil ditambahkan di browser ini. Database belum tersambung.`;
+  productStatus.textContent = `${name} berhasil ditambahkan ke database.`;
   renderAll();
   switchView("catalogView");
 });
@@ -822,7 +822,7 @@ importExcel.addEventListener("click", async () => {
     }
 
     let databaseCount = 0;
-    let localCount = 0;
+    let failedCount = 0;
 
     for (const product of importedProducts) {
       const databaseResult = await createDatabaseProduct(product);
@@ -830,17 +830,12 @@ importExcel.addEventListener("click", async () => {
         products.push({ ...databaseResult.product, custom: true });
         databaseCount += 1;
       } else {
-        products.push(product);
-        localCount += 1;
+        failedCount += 1;
       }
     }
 
-    if (localCount > 0) saveCustomProducts();
     excelFile.value = "";
-    excelStatus.textContent =
-      databaseCount > 0
-        ? `${databaseCount} produk berhasil diimport ke database.${localCount ? ` ${localCount} produk tersimpan lokal.` : ""}`
-        : `${localCount} produk berhasil diimport di browser ini. Database belum tersambung.`;
+    excelStatus.textContent = `${databaseCount} produk berhasil diimport ke database.${failedCount ? ` ${failedCount} produk gagal disimpan.` : ""}`;
     renderAll();
     switchView("catalogView");
   } catch (error) {
