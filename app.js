@@ -97,7 +97,7 @@ const storageKeys = {
   hiddenDefaultProducts: "kunbsmart.hiddenDefaultProducts",
 };
 
-const operatorAccessCode = "KUNB2026";
+const operatorEntryEnabled = new URLSearchParams(window.location.search).get("operator") === "1";
 
 let products = [...loadVisibleDefaultProducts(), ...loadStoredProducts()];
 let suggestions = loadStoredSuggestions();
@@ -131,6 +131,7 @@ const operatorForm = document.querySelector("#operatorForm");
 const operatorCode = document.querySelector("#operatorCode");
 const operatorStatus = document.querySelector("#operatorStatus");
 const operatorLogout = document.querySelector("#operatorLogout");
+const operatorTabs = document.querySelectorAll(".operator-tab");
 const deleteAllProducts = document.querySelector("#deleteAllProducts");
 const excelFile = document.querySelector("#excelFile");
 const importExcel = document.querySelector("#importExcel");
@@ -278,8 +279,33 @@ async function deleteAllDatabaseSuggestions() {
   });
 }
 
+async function verifyOperatorCode(code) {
+  return apiRequest("/api/operator", {
+    method: "POST",
+    headers: {
+      "x-operator-code": code,
+    },
+    body: JSON.stringify({}),
+  });
+}
+
 function isOperatorActive() {
   return sessionStorage.getItem(storageKeys.operator) === "active";
+}
+
+function canShowOperatorArea() {
+  return operatorEntryEnabled || isOperatorActive();
+}
+
+function updateOperatorVisibility() {
+  const showOperatorArea = canShowOperatorArea();
+  operatorTabs.forEach((tab) => {
+    tab.hidden = !showOperatorArea;
+  });
+
+  if (!showOperatorArea) {
+    switchView("catalogView");
+  }
 }
 
 function setOperatorAccess(active, code = "") {
@@ -288,6 +314,7 @@ function setOperatorAccess(active, code = "") {
   operatorForm.hidden = active;
   productForm.hidden = !active;
   operatorSuggestions.hidden = !active;
+  updateOperatorVisibility();
   if (active) {
     operatorStatus.textContent = "";
     operatorCode.value = "";
@@ -552,6 +579,10 @@ function setDrawer(open) {
 }
 
 function switchView(viewId) {
+  if ((viewId === "addProductView" || viewId === "suggestionView") && !canShowOperatorArea()) {
+    viewId = "catalogView";
+  }
+
   document.querySelectorAll(".app-view").forEach((view) => {
     view.classList.toggle("active", view.id === viewId);
   });
@@ -596,7 +627,7 @@ productGrid.addEventListener("click", (event) => {
 
 productGrid.addEventListener("click", async (event) => {
   const button = event.target.closest(".delete-button");
-  if (!button) return;
+  if (!button || !isOperatorActive()) return;
 
   const product = products.find((item) => String(item.id) === button.dataset.deleteId);
   if (!product) return;
@@ -616,6 +647,8 @@ productGrid.addEventListener("click", async (event) => {
 });
 
 deleteAllProducts.addEventListener("click", async () => {
+  if (!isOperatorActive()) return;
+
   const confirmed = confirm("Hapus semua produk dari katalog? Tindakan ini tidak bisa dibatalkan.");
   if (!confirmed) return;
 
@@ -687,15 +720,18 @@ productForm.addEventListener("submit", async (event) => {
   switchView("catalogView");
 });
 
-operatorForm.addEventListener("submit", (event) => {
+operatorForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  if (operatorCode.value.trim() !== operatorAccessCode) {
+  const code = operatorCode.value.trim();
+  const result = await verifyOperatorCode(code);
+
+  if (!result?.ok) {
     operatorStatus.textContent = "Kode operator salah.";
     return;
   }
 
-  setOperatorAccess(true, operatorCode.value.trim());
+  setOperatorAccess(true, code);
   renderProducts();
   renderSuggestions();
 });
@@ -704,6 +740,7 @@ operatorLogout.addEventListener("click", () => {
   sessionStorage.removeItem(storageKeys.operator);
   sessionStorage.removeItem(storageKeys.operatorCode);
   setOperatorAccess(false);
+  switchView("catalogView");
   renderProducts();
   renderSuggestions();
 });
