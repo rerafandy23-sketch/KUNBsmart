@@ -7,7 +7,9 @@
   --line: #d7e6d8;
   --brand: #2e7d32;
   --brand-dark: #1b5e20;
+  --brand-soft: #e8f5e9;
   --accent: #c2410c;
+  --gold: #d6a33d;
   --ok: #15803d;
   --warn: #b45309;
   --danger: #b91c1c;
@@ -21,7 +23,9 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(46, 125, 50, 0.13), transparent 30%),
+    linear-gradient(180deg, #ffffff 0, var(--bg) 340px, #f5f5f5 100%);
   color: var(--ink);
 }
 
@@ -40,10 +44,11 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px clamp(16px, 4vw, 44px);
+  padding: 16px clamp(16px, 4vw, 44px);
   background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 34px rgba(27, 94, 32, 0.08);
+  backdrop-filter: blur(18px);
 }
 
 .brand {
@@ -86,12 +91,12 @@ p {
 h1 {
   margin-bottom: 0;
   font-size: clamp(28px, 5vw, 44px);
-  line-height: 1;
+  line-height: 0.95;
 }
 
 .motto {
   margin: 7px 0 0;
-  color: #124469;
+  color: #315b36;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(13px, 2.8vw, 17px);
   font-style: italic;
@@ -102,30 +107,36 @@ h1 {
 main {
   width: min(1120px, 100%);
   margin: 0 auto;
-  padding: 18px clamp(14px, 4vw, 32px) 56px;
+  padding: 22px clamp(14px, 4vw, 32px) 64px;
 }
 
 .view-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 32px rgba(27, 94, 32, 0.08);
 }
 
 .view-tab {
   min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
   color: var(--muted);
   font-weight: 900;
   cursor: pointer;
+  transition: 0.18s ease;
 }
 
 .view-tab.active {
-  border-color: var(--brand);
   background: var(--brand);
   color: #ffffff;
+  box-shadow: 0 10px 22px rgba(46, 125, 50, 0.24);
 }
 
 .app-view {
@@ -145,8 +156,8 @@ main {
   justify-content: center;
   gap: 7px;
   padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+  border-radius: 12px;
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
@@ -180,11 +191,78 @@ main {
   font-size: 28px;
 }
 
+.storefront {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+  padding: clamp(18px, 4vw, 30px);
+  border: 1px solid rgba(46, 125, 50, 0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(46, 125, 50, 0.95), rgba(27, 94, 32, 0.9)),
+    #2e7d32;
+  color: #ffffff;
+  box-shadow: 0 22px 48px rgba(27, 94, 32, 0.22);
+}
+
+.storefront-copy {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+}
+
+.store-badge {
+  width: fit-content;
+  margin-bottom: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.storefront h2 {
+  margin: 0;
+  font-size: clamp(26px, 5vw, 42px);
+  line-height: 1.05;
+}
+
+.storefront p {
+  max-width: 620px;
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.storefront-card {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.storefront-card span,
+.storefront-card small {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 800;
+}
+
+.storefront-card strong {
+  font-size: 44px;
+  line-height: 1;
+}
+
 .search-panel {
   padding: 18px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
+  box-shadow: 0 14px 32px rgba(27, 94, 32, 0.08);
 }
 
 .search-panel label {
@@ -205,7 +283,7 @@ textarea {
   width: 100%;
   min-height: 46px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ffffff;
   color: var(--ink);
 }
@@ -235,7 +313,7 @@ textarea {
 .tab {
   min-height: 42px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 999px;
   background: var(--surface);
   color: var(--muted);
   font-weight: 800;
@@ -246,6 +324,7 @@ textarea {
   border-color: var(--brand);
   background: var(--brand);
   color: white;
+  box-shadow: 0 10px 20px rgba(46, 125, 50, 0.2);
 }
 
 .summary-grid {
@@ -259,7 +338,8 @@ textarea {
   padding: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
+  box-shadow: 0 12px 26px rgba(27, 94, 32, 0.07);
 }
 
 .summary-grid span {
@@ -292,7 +372,7 @@ textarea {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .form-panel {
@@ -301,7 +381,8 @@ textarea {
   padding: 18px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
+  box-shadow: 0 14px 32px rgba(27, 94, 32, 0.08);
 }
 
 .form-panel h3 {
@@ -358,17 +439,18 @@ textarea {
 .primary-button {
   min-height: 44px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--brand);
   color: #ffffff;
   font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 12px 22px rgba(46, 125, 50, 0.2);
 }
 
 .secondary-button {
   min-height: 40px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ffffff;
   color: var(--brand-dark);
   font-weight: 900;
@@ -378,7 +460,7 @@ textarea {
 .danger-button {
   min-height: 40px;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff5f5;
   color: var(--danger);
   font-weight: 900;
@@ -464,7 +546,7 @@ textarea {
   align-items: center;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #f5f5f5;
 }
 
@@ -485,14 +567,25 @@ textarea {
   padding: 14px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 16px;
+  box-shadow: 0 16px 34px rgba(27, 94, 32, 0.09);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.product-card:hover {
+  border-color: rgba(46, 125, 50, 0.35);
+  box-shadow: 0 22px 44px rgba(27, 94, 32, 0.14);
+  transform: translateY(-2px);
 }
 
 .product-image {
   display: grid;
   place-items: center;
   aspect-ratio: 4 / 3;
-  border-radius: 7px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #e8f5e9, #ffffff);
 }
 
@@ -560,8 +653,9 @@ textarea {
 
 .price {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
+  color: #102316;
 }
 
 .old-price {
@@ -591,11 +685,12 @@ textarea {
 .add-button {
   min-height: 42px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--brand);
   color: white;
   font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 10px 20px rgba(46, 125, 50, 0.18);
 }
 
 .add-button:disabled {
@@ -607,7 +702,7 @@ textarea {
 .delete-button {
   min-height: 40px;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff5f5;
   color: var(--danger);
   font-weight: 900;
@@ -629,7 +724,7 @@ textarea {
   grid-column: 1 / -1;
   padding: 28px;
   border: 1px dashed var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
   background: #f5f5f5;
   text-align: center;
   color: var(--muted);
@@ -681,7 +776,7 @@ textarea {
   align-items: center;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .cart-item .thumb {
@@ -718,6 +813,10 @@ textarea {
 }
 
 @media (max-width: 860px) {
+  .storefront {
+    grid-template-columns: 1fr;
+  }
+
   .product-grid,
   .suggestion-layout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -755,6 +854,7 @@ textarea {
 
   .search-row,
   .summary-grid,
+  .storefront,
   .product-grid,
   .form-grid,
   .excel-actions,

@@ -454,6 +454,8 @@ function renderSummary() {
   document.querySelector("#availableCount").textContent = products.filter((item) => item.stock > 0).length;
   document.querySelector("#promoCount").textContent = products.filter((item) => item.promo).length;
   document.querySelector("#newCount").textContent = products.filter((item) => item.isNew).length;
+  const heroPromoCount = document.querySelector("#heroPromoCount");
+  if (heroPromoCount) heroPromoCount.textContent = products.filter((item) => item.promo).length;
 }
 
 function renderRecommendations() {
