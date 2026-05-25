@@ -416,6 +416,23 @@ textarea {
   gap: 10px;
 }
 
+.operator-suggestions {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.operator-suggestions[hidden] {
+  display: none;
+}
+
+.operator-only {
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .suggestion-item {
   padding: 12px;
   border: 1px solid var(--line);
