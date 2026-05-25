@@ -316,6 +316,14 @@ textarea {
   gap: 12px;
 }
 
+.operator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .form-panel label {
   display: grid;
   gap: 8px;
@@ -365,6 +373,22 @@ textarea {
   color: var(--brand-dark);
   font-weight: 900;
   cursor: pointer;
+}
+
+.danger-button {
+  min-height: 40px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: var(--danger);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.danger-button.compact {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 .status-message {
@@ -434,6 +458,10 @@ textarea {
 }
 
 .suggestion-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -586,6 +614,17 @@ textarea {
   cursor: pointer;
 }
 
+.delete-suggestion-button {
+  min-height: 34px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .empty-state {
   grid-column: 1 / -1;
   padding: 28px;
@@ -732,5 +771,15 @@ textarea {
     align-items: start;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .form-title-row,
+  .operator-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .suggestion-item {
+    grid-template-columns: 1fr;
   }
 }

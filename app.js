@@ -131,6 +131,7 @@ const operatorForm = document.querySelector("#operatorForm");
 const operatorCode = document.querySelector("#operatorCode");
 const operatorStatus = document.querySelector("#operatorStatus");
 const operatorLogout = document.querySelector("#operatorLogout");
+const deleteAllProducts = document.querySelector("#deleteAllProducts");
 const excelFile = document.querySelector("#excelFile");
 const importExcel = document.querySelector("#importExcel");
 const exportExcel = document.querySelector("#exportExcel");
@@ -141,6 +142,7 @@ const suggestionStatus = document.querySelector("#suggestionStatus");
 const recommendedProducts = document.querySelector("#recommendedProducts");
 const customerSuggestions = document.querySelector("#customerSuggestions");
 const operatorSuggestions = document.querySelector("#operatorSuggestions");
+const deleteAllSuggestions = document.querySelector("#deleteAllSuggestions");
 
 function loadStoredProducts() {
   try {
@@ -215,7 +217,7 @@ async function loadDatabaseData() {
   ]);
 
   if (productData?.products) {
-    products = [...defaultProducts, ...productData.products.map((product) => ({ ...product, custom: true }))];
+    products = productData.products.map((product) => ({ ...product, custom: true }));
   }
 
   if (suggestionData?.suggestions) {
@@ -242,10 +244,37 @@ async function deleteDatabaseProduct(productId) {
   });
 }
 
+async function deleteAllDatabaseProducts() {
+  return apiRequest("/api/products?all=true", {
+    method: "DELETE",
+    headers: {
+      "x-operator-code": getOperatorCode(),
+    },
+  });
+}
+
 async function createDatabaseSuggestion(suggestion) {
   return apiRequest("/api/suggestions", {
     method: "POST",
     body: JSON.stringify(suggestion),
+  });
+}
+
+async function deleteDatabaseSuggestion(suggestionId) {
+  return apiRequest(`/api/suggestions?id=${encodeURIComponent(suggestionId)}`, {
+    method: "DELETE",
+    headers: {
+      "x-operator-code": getOperatorCode(),
+    },
+  });
+}
+
+async function deleteAllDatabaseSuggestions() {
+  return apiRequest("/api/suggestions?all=true", {
+    method: "DELETE",
+    headers: {
+      "x-operator-code": getOperatorCode(),
+    },
   });
 }
 
@@ -467,8 +496,13 @@ function renderSuggestions() {
     .map(
       (suggestion) => `
         <article class="suggestion-item">
-          <strong>${escapeHtml(suggestion.name || "Pelanggan")}</strong>
-          <span>${escapeHtml(suggestion.text)}</span>
+          <div>
+            <strong>${escapeHtml(suggestion.name || "Pelanggan")}</strong>
+            <span>${escapeHtml(suggestion.text)}</span>
+          </div>
+          <button class="delete-suggestion-button" data-suggestion-id="${escapeHtml(suggestion.id || suggestion.createdAt)}">
+            Hapus
+          </button>
         </article>
       `,
     )
@@ -579,6 +613,27 @@ productGrid.addEventListener("click", async (event) => {
   renderAll();
 });
 
+deleteAllProducts.addEventListener("click", async () => {
+  const confirmed = confirm("Hapus semua produk dari katalog? Tindakan ini tidak bisa dibatalkan.");
+  if (!confirmed) return;
+
+  const databaseResult = await deleteAllDatabaseProducts();
+  products.forEach((product) => {
+    if (!product.custom) hideDefaultProduct(product.id);
+  });
+  products = [];
+  state.cart = [];
+  localStorage.setItem(storageKeys.products, JSON.stringify([]));
+  localStorage.setItem(
+    storageKeys.hiddenDefaultProducts,
+    JSON.stringify(defaultProducts.map((product) => String(product.id))),
+  );
+  productStatus.textContent = databaseResult?.ok
+    ? "Semua produk berhasil dihapus dari database."
+    : "Semua produk dihapus dari tampilan browser ini.";
+  renderAll();
+});
+
 cartButton.addEventListener("click", () => setDrawer(true));
 closeDrawer.addEventListener("click", () => setDrawer(false));
 cartDrawer.addEventListener("click", (event) => {
@@ -648,6 +703,42 @@ operatorLogout.addEventListener("click", () => {
   sessionStorage.removeItem(storageKeys.operatorCode);
   setOperatorAccess(false);
   renderProducts();
+  renderSuggestions();
+});
+
+customerSuggestions.addEventListener("click", async (event) => {
+  const button = event.target.closest(".delete-suggestion-button");
+  if (!button || !isOperatorActive()) return;
+
+  const suggestion = suggestions.find((item) => String(item.id || item.createdAt) === button.dataset.suggestionId);
+  if (!suggestion) return;
+
+  const confirmed = confirm(`Hapus saran dari "${suggestion.name || "Pelanggan"}"?`);
+  if (!confirmed) return;
+
+  const databaseResult = String(suggestion.id || "").startsWith("db-")
+    ? await deleteDatabaseSuggestion(suggestion.id)
+    : null;
+  suggestions = suggestions.filter((item) => String(item.id || item.createdAt) !== button.dataset.suggestionId);
+  saveSuggestions();
+  suggestionStatus.textContent = databaseResult?.ok
+    ? "Saran berhasil dihapus dari database."
+    : "Saran berhasil dihapus dari tampilan browser ini.";
+  renderSuggestions();
+});
+
+deleteAllSuggestions.addEventListener("click", async () => {
+  if (!isOperatorActive()) return;
+
+  const confirmed = confirm("Hapus semua saran pelanggan? Tindakan ini tidak bisa dibatalkan.");
+  if (!confirmed) return;
+
+  const databaseResult = await deleteAllDatabaseSuggestions();
+  suggestions = [];
+  saveSuggestions();
+  suggestionStatus.textContent = databaseResult?.ok
+    ? "Semua saran berhasil dihapus dari database."
+    : "Semua saran berhasil dihapus dari browser ini.";
   renderSuggestions();
 });
 

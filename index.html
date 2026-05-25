@@ -98,7 +98,10 @@
         <form class="form-panel locked-panel" id="productForm" hidden>
           <div class="form-title-row">
             <h3>Tambah Produk</h3>
-            <button class="secondary-button" id="operatorLogout" type="button">Keluar Operator</button>
+            <div class="operator-actions">
+              <button class="danger-button" id="deleteAllProducts" type="button">Hapus Semua Produk</button>
+              <button class="secondary-button" id="operatorLogout" type="button">Keluar Operator</button>
+            </div>
           </div>
           <div class="form-grid">
             <label>
@@ -179,7 +182,10 @@
             <section class="operator-suggestions" id="operatorSuggestions">
               <div class="form-title-row">
                 <h3>Saran Masuk</h3>
-                <span class="operator-only">Khusus operator</span>
+                <div class="operator-actions">
+                  <span class="operator-only">Khusus operator</span>
+                  <button class="danger-button compact" id="deleteAllSuggestions" type="button">Hapus Semua Saran</button>
+                </div>
               </div>
               <div class="suggestion-list" id="customerSuggestions"></div>
             </section>
