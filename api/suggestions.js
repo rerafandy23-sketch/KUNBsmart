@@ -1,5 +1,7 @@
 import { ensureTables, getSql, mapSuggestion } from "../lib/db.js";
 
+const operatorCode = process.env.OPERATOR_CODE || "KUNB2026";
+
 function send(res, status, body) {
   res.status(status).json(body);
 }
@@ -39,10 +41,38 @@ export default async function handler(req, res) {
       return;
     }
 
-    res.setHeader("Allow", "GET, POST");
+    if (req.method === "DELETE") {
+      if (req.headers["x-operator-code"] !== operatorCode) {
+        send(res, 401, { error: "Kode operator tidak valid." });
+        return;
+      }
+
+      if (req.query.all === "true") {
+        await db`DELETE FROM suggestions`;
+        send(res, 200, { ok: true });
+        return;
+      }
+
+      const suggestionId = String(req.query.id || "").replace("db-", "");
+      const numericId = Number(suggestionId);
+
+      if (!numericId) {
+        send(res, 400, { error: "ID saran tidak valid." });
+        return;
+      }
+
+      await db`
+        DELETE FROM suggestions
+        WHERE id = ${numericId}
+      `;
+
+      send(res, 200, { ok: true });
+      return;
+    }
+
+    res.setHeader("Allow", "GET, POST, DELETE");
     send(res, 405, { error: "Method tidak didukung." });
   } catch (error) {
     send(res, 503, { error: error.message || "Database belum tersambung." });
   }
 }
-
