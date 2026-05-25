@@ -59,6 +59,12 @@ export default async function handler(req, res) {
       const productId = String(req.query.id || "").replace("db-", "");
       const numericId = Number(productId);
 
+      if (req.query.all === "true") {
+        await db`DELETE FROM products`;
+        send(res, 200, { ok: true });
+        return;
+      }
+
       if (!numericId) {
         send(res, 400, { error: "ID produk tidak valid." });
         return;
@@ -79,4 +85,3 @@ export default async function handler(req, res) {
     send(res, 503, { error: error.message || "Database belum tersambung." });
   }
 }
-
